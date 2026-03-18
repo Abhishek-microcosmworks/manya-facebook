@@ -47,12 +47,32 @@ export class UserProfileDto {
   @IsEnum(ROLE_VALUES)
   role: ROLE_VALUES;
 
+  @ApiProperty({ example: 'john.doe' })
+  username: string;
+
+  @ApiProperty({ example: 'Software Developer' })
+  bio: string;
+
+  @ApiProperty({ example: 'https://s3.amazonaws.com/bucket/profile.jpg' })
+  profilePic: string;
+
+  @ApiProperty({ example: 'https://s3.amazonaws.com/bucket/cover.jpg' })
+  coverPic: string;
+
+  @ApiProperty({ example: 150 })
+  friendCount: number;
+
   static transform(object: User): UserProfileDto {
     const transformedObj: UserProfileDto = new UserProfileDto();
 
     transformedObj.id = object._id.toString();
     transformedObj.email = object.email;
     transformedObj.name = object.name;
+    transformedObj.username = object.username || '';
+    transformedObj.bio = object.bio || '';
+    transformedObj.profilePic = object.profilePic || '';
+    transformedObj.coverPic = object.coverPic || '';
+    transformedObj.friendCount = object.friendCount || 0;
     transformedObj.isEmailVerified = object.isEmailVerified;
     transformedObj.isAccountCompleted = object.isAccountCompleted;
     transformedObj.isDeleted = object.isDeleted;
