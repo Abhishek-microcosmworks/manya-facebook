@@ -23,6 +23,7 @@ import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { UserProfileDto } from 'src/user/user/user-dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class CredentialsAuthService {
@@ -69,12 +70,16 @@ export class CredentialsAuthService {
           );
         }
       }
+      const baseUsername = name.toLowerCase().replace(/\s+/g, '.');
+      const uniqueId = uuidv4().replace(/-/g, '').slice(0, 8);
+      const autoUsername = `${baseUsername}.${uniqueId}`;
 
       const newUser = await this.userModel.create({
         name,
         email,
         password,
         acceptTerms,
+        username: autoUsername,
       });
 
       newUser.email = email;
