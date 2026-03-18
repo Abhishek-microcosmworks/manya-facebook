@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%- isValid ? 'Reset Password' : 'Invalid Token' %></title>
+
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome for eye icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      body {
+        height: 100vh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        background-color: white;
+        font-family: 'Exo', serif;
+        font-optical-sizing: auto;
+      }
+      header {
+        width: 100%;
+        background-color: #387160;
+        padding: 10px 0;
+        box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+        margin-bottom: 5rem;
+      }
+      header .logo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      header .logo img {
+        height: 50px;
+        width: 190px;
+      }
+      header .logo .app-icon {
+        height: 40px;
+        width: 40px;
+        margin-right: 10px;
+      }
+      .card {
+        width: 90%;
+        max-width: 400px;
+        border-radius: 10px;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        background: #c1f3c7;
+        text-align: center;
+        padding: 20px;
+        border: 2px solid #3f2a66;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .card-title {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+      }
+      .card-title.invalid-token {
+        color: red;
+      }
+      .card p {
+        color: #555;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+        text-align: left;
+        width: 100%;
+        position: relative;
+      }
+      .form-group label {
+        color: #555;
+      }
+      .form-control {
+        width: 100%;
+        padding: 7px 17px;
+        border-radius: 30px;
+        border: 2px solid #3f2a66;
+      }
+      .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #555;
+        background: none;
+        border: none;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        outline: none;
+      }
+      .invalid-feedback {
+        color: red;
+        font-size: 0.9rem;
+        text-align: left;
+        display: none; /* Hidden by default */
+      }
+      .btn-submit {
+        color: white;
+        border: none;
+        padding: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 10px;
+        width: 37%;
+        border-radius: 30px;
+        background-color: #3f2a66;
+      }
+      .btn-submit:hover {
+        background-color: #472e75;
+      }
+      .invalid-token {
+        color: red;
+        font-size: 1.2rem;
+      }
+      .input-div {
+        height: 100%;
+        width: 100%;
+        position: relative;
+      }
+
+      /* Custom Alert Box Styles */
+      .custom-alert {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        z-index: 1000;
+        text-align: center;
+        width: 80%;
+      }
+      .custom-alert p {
+        margin-bottom: 20px;
+        font-size: 1rem;
+        color: #555;
+      }
+      .custom-alert button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      .custom-alert button.error {
+        background-color: #dc3545; /* Red background for error alerts */
+      }
+      .custom-alert button:hover {
+        opacity: 0.9;
+      }
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+    </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Exo:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- Header Section -->
+    <header>
+      <div class="logo">
+        <img src="/nestjs-starter_logo.png" alt="nestjs-starter" />
+      </div>
+    </header>
+
+    <!-- Card Section -->
+    <div class="card">
+      <% if (isValid) { %>
+        <h1 class="card-title">Reset Password</h1>
+        <p style="font-weight: 500;">Please enter a new password for your account.</p>
+        <form id="resetPasswordForm" style="width: 90%;">
+          <div class="form-group">
+            <label for="newPass">New Password</label>
+            <div class="input-div">
+              <input
+                type="password"
+                id="newPass"
+                name="newPass"
+                class="form-control"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                onclick="togglePassword('newPass')"
+              >
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback" id="newPassError">
+              Password must be at least 8 characters long, alphanumeric, and include 1 uppercase letter, 1 lowercase letter, and 1 special character (!@#$%^&*).
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="confirmNewPass">Confirm New Password</label>
+            <div class="input-div">
+              <input
+                type="password"
+                id="confirmNewPass"
+                name="confirmNewPass"
+                class="form-control"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                onclick="togglePassword('confirmNewPass')"
+              >
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback" id="confirmPassError">
+              Passwords do not match.
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit</button>
+        </form>
+      <% } else { %>
+        <h1 class="card-title invalid-token">Invalid Token</h1>
+        <p style="font-weight: 500;">
+          The reset password link is invalid or has expired. Please request a
+          new reset link from the login page.
+        </p>
+      <% } %>
+    </div>
+
+    <!-- Custom Alert Box -->
+    <div class="overlay" id="overlay"></div>
+    <div class="custom-alert" id="customAlert">
+      <p id="alertMessage"></p>
+      <button id="alertButton" onclick="handleAlertClose()">OK</button>
+    </div>
+
+    <!-- JavaScript for validation, password toggle, and PUT request -->
+    <script>
+      // Toggle password visibility
+      function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling.querySelector("i");
+
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      }
+
+      // Extract token from URL path
+      function getTokenFromPath() {
+        const pathSegments = window.location.pathname.split("/");
+        return pathSegments[pathSegments.length - 1]; // Get the last segment of the path
+      }
+
+      // Show custom alert
+      function showAlert(message, isError = false) {
+        const alertMessage = document.getElementById("alertMessage");
+        const alertButton = document.getElementById("alertButton");
+
+        alertMessage.textContent = message;
+        if (isError) {
+          alertButton.classList.add("error"); // Add red background for error alerts
+        } else {
+          alertButton.classList.remove("error"); // Remove red background for success alerts
+        }
+        document.getElementById("customAlert").style.display = "block";
+        document.getElementById("overlay").style.display = "block";
+      }
+
+      // Handle alert close
+      function handleAlertClose() {
+        document.getElementById("customAlert").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+
+        // Close the window only for success alerts
+        if (!document.getElementById("alertButton").classList.contains("error")) {
+          window.close();
+        }
+      }
+
+      // Validate password
+      function validatePassword(password) {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+        return regex.test(password);
+      }
+
+      // Form validation and submission
+      document
+        .getElementById("resetPasswordForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault(); // Prevent default form submission
+
+          const newPass = document.getElementById("newPass").value;
+          const confirmNewPass = document.getElementById("confirmNewPass").value;
+          const newPassError = document.getElementById("newPassError");
+          const confirmPassError = document.getElementById("confirmPassError");
+
+          let isValid = true;
+
+          // Validate new password
+          if (!newPass) {
+            newPassError.textContent = "This field is required.";
+            newPassError.style.display = "block";
+            isValid = false;
+          } else if (!validatePassword(newPass)) {
+            newPassError.textContent =
+              "Password must be at least 8 characters long, alphanumeric, and include 1 uppercase letter, 1 lowercase letter, and 1 special character (!@#$%^&*).";
+            newPassError.style.display = "block";
+            isValid = false;
+          } else {
+            newPassError.style.display = "none";
+          }
+
+          // Check if confirm password is empty
+          if (!confirmNewPass) {
+            confirmPassError.textContent = "This field is required.";
+            confirmPassError.style.display = "block";
+            isValid = false;
+          } else {
+            confirmPassError.style.display = "none";
+          }
+
+          // Check if passwords match
+          if (newPass && confirmNewPass && newPass !== confirmNewPass) {
+            confirmPassError.textContent = "Passwords do not match.";
+            confirmPassError.style.display = "block";
+            isValid = false;
+          }
+
+          // If validation passes, send PUT request
+          if (isValid) {
+            const token = getTokenFromPath(); // Get token from URL path
+            const data = {
+              newPass: newPass,
+              confirmNewPass: confirmNewPass,
+              token: token,
+            };
+
+            fetch("/api/reset_password", {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            })
+              .then((response) => {
+                if (response.ok) {
+                  showAlert(
+                    "Your password has been successfully reset. You can now log in using your new password."
+                  );
+                } else {
+                  showAlert(
+                    "Failed to reset password. Please check your input and try again.",
+                    true
+                  );
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                showAlert(
+                  "An error occurred while resetting your password. Please try again.",
+                  true
+                );
+              });
+          }
+        });
+    </script>
+  </body>
+</html>
