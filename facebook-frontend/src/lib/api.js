@@ -32,13 +32,16 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
   const url = new URL(relativePath, baseWithSlash);
   const headers = { Accept: 'application/json' };
 
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
+  const isFormData = body instanceof FormData;
+  if (body !== undefined && !isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const res = await fetch(url, {
     method,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: isFormData ? body : (body === undefined ? undefined : JSON.stringify(body)),
   });
 
   const data = await parseJsonSafe(res);
