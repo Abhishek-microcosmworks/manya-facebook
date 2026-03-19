@@ -41,17 +41,20 @@ export class User extends Document {
   })
   name: string;
 
-  @Prop({ type: String, maxlength: 160 })
-  bio: string;
+  // @Prop({ type: String, maxlength: 160 })
+  // bio: string;
 
-  @Prop({ type: String })
-  profilePic: string; // Stores the S3 URL
+  // @Prop({ type: String })
+  // profilePic: string; // Stores the S3 URL
 
-  @Prop({ type: String })
-  coverPic: string; // Stores the S3 URL
+  // @Prop({ type: String })
+  // coverPic: string; // Stores the S3 URL
 
-  @Prop({ type: Number, default: 0 })
-  friendCount: number; 
+  // @Prop({ type: Number, default: 0 })
+  // friendCount: number; 
+
+  @Prop({ type: Types.ObjectId, ref: 'Profile' })
+  profile: Types.ObjectId; // Link to the Profile document
 
   @Prop({ type: Boolean, default: false })
   isEmailVerified: boolean;

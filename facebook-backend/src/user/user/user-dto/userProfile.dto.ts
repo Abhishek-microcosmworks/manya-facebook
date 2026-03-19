@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsOptional,
 } from 'class-validator';
+import { profile } from 'console';
 import { ROLE_VALUES, User } from 'models/user/user.schema';
 
 export class UserProfileDto {
@@ -62,17 +63,19 @@ export class UserProfileDto {
   @ApiProperty({ example: 150 })
   friendCount: number;
 
-  static transform(object: User): UserProfileDto {
+  static transform(object: any): UserProfileDto {
     const transformedObj: UserProfileDto = new UserProfileDto();
 
     transformedObj.id = object._id.toString();
     transformedObj.email = object.email;
     transformedObj.name = object.name;
     transformedObj.username = object.username || '';
-    transformedObj.bio = object.bio || '';
-    transformedObj.profilePic = object.profilePic || '';
-    transformedObj.coverPic = object.coverPic || '';
-    transformedObj.friendCount = object.friendCount || 0;
+    
+    if (object.profile) {
+      transformedObj.bio = object.profile.bio || '';
+      transformedObj.profilePic = object.profile.profile_pic_id?.url || '';
+      transformedObj.coverPic = object.profile.cover_media_id?.url || '';
+    } 
     transformedObj.isEmailVerified = object.isEmailVerified;
     transformedObj.isAccountCompleted = object.isAccountCompleted;
     transformedObj.isDeleted = object.isDeleted;
