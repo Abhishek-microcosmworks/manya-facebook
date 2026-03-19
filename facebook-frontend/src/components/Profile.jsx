@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { apiRequest } from '../lib/api';
-import { CameraIcon, PencilIcon } from '@heroicons/react/24/solid';
+import { CameraIcon, PencilIcon, ArrowLeftIcon } from '@heroicons/react/24/solid';
 
 export default function Profile() {
   const { username } = useParams();
+  const navigate = useNavigate();
+
   const { user: currentUser, accessToken, setSession, expiry } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,12 @@ export default function Profile() {
       {/* Header Section */}
       <div className="bg-white shadow-sm">
         <div className="max-w-[1095px] mx-auto relative">
+          <button 
+            onClick={() => navigate(-1)}
+            className="md:hidden absolute top-4 left-4 z-50 h-9 w-9 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition md:bg-white md:text-black md:shadow-md"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+          </button>
           {/* Cover Photo */}
           <div className="h-[200px] md:h-[400px] bg-gray-200 rounded-b-xl relative overflow-hidden">
             {profile.coverPic ? (
