@@ -1,11 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { apiRequest } from '../lib/api';
+import PostCard from './feed/PostCard';
+import CreatePostModal from './feed/CreatePostModal';
 import {HomeIcon, UserGroupIcon, VideoCameraIcon, BuildingStorefrontIcon, NewspaperIcon, MagnifyingGlassIcon, ChatBubbleLeftEllipsisIcon, BellIcon,
   PlusIcon, PhotoIcon, FaceSmileIcon, VideoCameraIcon as LiveVideoIcon } from '@heroicons/react/24/solid';
 
 export default function Home() {
-  const { user, logout } = useAuth();
+  const { user, logout, accessToken } = useAuth();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const fetchTimeline = useCallback(async () => {
+    if (!accessToken) return;
+    try {
+      setLoading(true);
+      const res = await apiRequest('/posts/timeline', { token: accessToken });
+      setPosts(res || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken]);
+
+  useEffect(() => { fetchTimeline(); }, [fetchTimeline]);
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] font-sans">
@@ -85,9 +106,12 @@ export default function Home() {
           <div className="mb-4 w-full max-w-[590px] rounded-lg bg-white p-4 shadow-sm">
             <div className="flex gap-2">
               <Link to={`/profile/${user?.username}`} className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
-                 <img src={user?.profilePic || 'https://via.placeholder.com/150'} alt="me" />
+                 <img src={user?.profilePic || 'https://via.placeholder.com/150'} alt="me" className="w-full h-full object-cover" />
               </Link>
-              <button className="flex-1 rounded-full bg-[#f0f2f5] px-4 text-left text-[17px] text-gray-600 hover:bg-gray-200 transition">
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex-1 rounded-full bg-[#f0f2f5] px-4 text-left text-[17px] text-gray-600 hover:bg-gray-200 transition"
+              >
                 What's on your mind, {user?.name?.split(' ')[0]}?
               </button>
             </div>
@@ -99,11 +123,26 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Placeholder for Posts */}
-          <div className="w-full max-w-[590px] space-y-4">
-            <div className="rounded-lg bg-white p-12 text-center text-gray-500 shadow-sm ring-1 ring-gray-200">
-               Posts will appear here. Start building your Feed API!
-            </div>
+          {/* Posts Feed */}
+          <div className="w-full max-w-[590px] space-y-4 pb-20">
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <svg className="animate-spin w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="rounded-lg bg-white p-12 text-center text-gray-500 shadow-sm ring-1 ring-gray-200">
+                No posts to show right now.
+                <br className="mb-2"/> 
+                Start posting or build out your friend network!
+              </div>
+            ) : (
+              posts.map(post => (
+                <PostCard key={post._id + post.feed_type} post={post} />
+              ))
+            )}
           </div>
         </main>
 
@@ -121,6 +160,13 @@ export default function Home() {
           </div>
         </aside>
       </div>
+
+      {isCreateModalOpen && (
+        <CreatePostModal 
+          onClose={() => setIsCreateModalOpen(false)} 
+          onPostCreated={fetchTimeline} 
+        />
+      )}
     </div>
   );
 }
