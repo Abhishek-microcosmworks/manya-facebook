@@ -9,10 +9,16 @@ export class Profile extends Document {
   @Prop({ type: String, maxlength: 160, default: '' })
   bio: string;
 
+  @Prop({ type: String, maxlength: 100, default: '' })
+  location: string;
+
+  @Prop({ type: String, maxlength: 200, default: '' })
+  website: string;
+
   @Prop({ type: Types.ObjectId, ref: 'Media' })
   profile_pic_id: Types.ObjectId; // Ref to Media collection
 
   @Prop({ type: Types.ObjectId, ref: 'Media' })
-  cover_media_id: Types.ObjectId; 
+  cover_media_id: Types.ObjectId;
 }
 export const ProfileSchema = SchemaFactory.createForClass(Profile);
