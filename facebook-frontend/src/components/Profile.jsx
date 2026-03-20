@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { apiRequest } from '../lib/api';
 import {
-  CameraIcon, PencilIcon, ArrowLeftIcon, XMarkIcon, MapPinIcon, GlobeAltIcon, UserIcon,
+  CameraIcon, PencilIcon, ArrowLeftIcon, XMarkIcon, MapPinIcon, GlobeAltIcon, UserIcon, UserPlusIcon, ClockIcon, CheckIcon, ChatBubbleLeftEllipsisIcon, EllipsisHorizontalIcon
 } from '@heroicons/react/24/solid';
 import EditProfileModal from './EditProfileModal';
+import FriendsTab from './FriendsTab';
 
 export default function Profile() {
   const { username } = useParams();
@@ -16,6 +17,9 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [friendStatus, setFriendStatus] = useState('none'); // 'none', 'pending_sent', 'pending_received', 'friends', 'blocked'
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [activeTab, setActiveTab] = useState('Posts');
 
   const isOwner = currentUser?.username === username;
 
@@ -25,6 +29,7 @@ export default function Profile() {
       const res = await apiRequest(`/profile/${username}`);
       if (res.user) {
         setProfile(res.user);
+        return res.user;
       }
     } catch (err) {
       console.error('Fetch profile error:', err);
@@ -33,7 +38,26 @@ export default function Profile() {
     }
   }, [username]);
 
-  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+  const fetchFriendStatus = useCallback(async (profileId) => {
+    if (isOwner || !profileId || !accessToken) return;
+    try {
+      const res = await apiRequest(`/friends/status/${profileId}`, { token: accessToken });
+      if (res.status === 'blocked_by') {
+        // Hide profile if blocked by them
+        setProfile(null);
+      } else {
+        setFriendStatus(res.status);
+      }
+    } catch (err) {
+      console.error('Fetch friend status error:', err);
+    }
+  }, [isOwner, accessToken]);
+
+  useEffect(() => { 
+    fetchProfile().then(user => {
+      if (user && user.id) fetchFriendStatus(user.id);
+    }); 
+  }, [fetchProfile, fetchFriendStatus]);
 
   // Uploads a single file (profile pic or cover pic)
   const handleUpdateMedia = async (type, file) => {
@@ -79,6 +103,38 @@ export default function Profile() {
       if (updatedUser.username && updatedUser.username !== username) {
         navigate(`/profile/${updatedUser.username}`, { replace: true });
       }
+    }
+  };
+
+  const handleFriendAction = async (action) => {
+    if (!profile?.id || !accessToken) return;
+    try {
+      setIsUpdating(true);
+      if (action === 'add') {
+        const res = await apiRequest(`/friends/request/${profile.id}`, { method: 'POST', token: accessToken });
+        if (res.success) setFriendStatus('pending_sent');
+      } else if (action === 'accept') {
+        await apiRequest(`/friends/accept/${profile.id}`, { method: 'POST', token: accessToken });
+        setFriendStatus('friends');
+      } else if (action === 'cancel' || action === 'reject') {
+        const route = action === 'cancel' ? `/friends/cancel/${profile.id}` : `/friends/reject/${profile.id}`;
+        await apiRequest(route, { method: 'POST', token: accessToken });
+        setFriendStatus('none');
+      } else if (action === 'remove') {
+        await apiRequest(`/friends/remove/${profile.id}`, { method: 'DELETE', token: accessToken });
+        setFriendStatus('none');
+      } else if (action === 'block') {
+        await apiRequest(`/friends/block/${profile.id}`, { method: 'POST', token: accessToken });
+        setFriendStatus('blocked');
+      } else if (action === 'unblock') {
+        await apiRequest(`/friends/unblock/${profile.id}`, { method: 'DELETE', token: accessToken });
+        setFriendStatus('none');
+      }
+    } catch (err) {
+      alert(err.message || 'Action failed');
+    } finally {
+      setIsUpdating(false);
+      setShowDropdown(false);
     }
   };
 
@@ -220,6 +276,68 @@ export default function Profile() {
                 </button>
               </div>
             )}
+
+            {/* Non-Owner Friend Actions */}
+            {!isOwner && profile?.id && (
+              <div className="flex gap-2 mb-2 flex-shrink-0 pt-2 md:pt-4 items-start justify-center md:justify-end relative">
+                {friendStatus === 'none' && (
+                  <button onClick={() => handleFriendAction('add')} className="bg-[#1877f2] text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-[#166fe5] transition flex items-center gap-2">
+                    <UserPlusIcon className="w-4 h-4" /> Add Friend
+                  </button>
+                )}
+                {friendStatus === 'pending_sent' && (
+                  <button onClick={() => handleFriendAction('cancel')} className="bg-gray-200 text-gray-900 px-4 py-2 rounded-md font-bold text-sm hover:bg-gray-300 transition flex items-center gap-2">
+                    <ClockIcon className="w-4 h-4" /> Cancel Request
+                  </button>
+                )}
+                {friendStatus === 'pending_received' && (
+                  <button onClick={() => handleFriendAction('accept')} className="bg-[#1877f2] text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-[#166fe5] transition flex items-center gap-2">
+                    <UserPlusIcon className="w-4 h-4" /> Respond
+                  </button>
+                )}
+                {friendStatus === 'friends' && (
+                  <button onClick={() => setShowDropdown(!showDropdown)} className="bg-gray-200 text-gray-900 px-4 py-2 rounded-md font-bold text-sm hover:bg-gray-300 transition flex items-center gap-2">
+                    <CheckIcon className="w-4 h-4" /> Friends
+                  </button>
+                )}
+                {friendStatus === 'blocked' && (
+                  <button onClick={() => handleFriendAction('unblock')} className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-md font-bold text-sm hover:bg-red-100 transition flex items-center gap-2">
+                    Unblock
+                  </button>
+                )}
+
+                {friendStatus !== 'blocked' && (
+                  <button className="bg-[#1877f2] text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-[#166fe5] transition flex items-center gap-2">
+                    <ChatBubbleLeftEllipsisIcon className="w-4 h-4" /> Message
+                  </button>
+                )}
+
+                {/* More options dropdown */}
+                <button onClick={() => setShowDropdown(!showDropdown)} className="bg-gray-200 text-gray-900 px-3 py-2 rounded-md font-bold text-sm hover:bg-gray-300 transition">
+                  <EllipsisHorizontalIcon className="w-5 h-5" />
+                </button>
+
+                {showDropdown && (
+                  <div className="absolute right-0 top-12 mt-1 w-48 bg-white rounded-lg shadow-xl border overflow-hidden z-50">
+                    {friendStatus === 'friends' && (
+                      <button onClick={() => handleFriendAction('remove')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 font-semibold transition">
+                        Unfriend
+                      </button>
+                    )}
+                    {friendStatus === 'pending_received' && (
+                      <button onClick={() => handleFriendAction('reject')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 font-semibold transition">
+                        Delete Request
+                      </button>
+                    )}
+                    {friendStatus !== 'blocked' && (
+                      <button onClick={() => handleFriendAction('block')} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gray-100 font-semibold transition">
+                        Block
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="border-t mx-4 md:mx-8" />
@@ -229,8 +347,9 @@ export default function Profile() {
             {['Posts', 'About', 'Friends', 'Photos', 'Videos'].map((tab) => (
               <button
                 key={tab}
-                className={`px-4 py-3 font-semibold text-sm border-b-4 border-transparent hover:bg-gray-100 rounded-md transition whitespace-nowrap
-                  ${tab === 'Posts' ? 'text-[#1877f2] border-b-[#1877f2] hover:bg-transparent' : 'text-gray-600'}`}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-3 font-semibold text-sm border-b-4 hover:bg-gray-100 rounded-md transition whitespace-nowrap
+                  ${activeTab === tab ? 'text-[#1877f2] border-b-[#1877f2] hover:bg-transparent' : 'border-transparent text-gray-600'}`}
               >
                 {tab}
               </button>
@@ -292,12 +411,25 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Feed */}
+        {/* Feed or Tabs */}
         <div className="lg:col-span-3">
-          <div className="bg-white p-4 rounded-xl shadow-sm border mb-4">
-            <h2 className="text-xl font-bold">Posts</h2>
-            <div className="py-10 text-center text-gray-500 italic text-sm">No posts yet.</div>
-          </div>
+          {activeTab === 'Posts' && (
+            <div className="bg-white p-4 rounded-xl shadow-sm border mb-4">
+              <h2 className="text-xl font-bold">Posts</h2>
+              <div className="py-10 text-center text-gray-500 italic text-sm">No posts yet.</div>
+            </div>
+          )}
+
+          {activeTab === 'Friends' && (
+            <FriendsTab profileId={profile.id} isOwner={isOwner} />
+          )}
+
+          {/* Placeholders for other tabs */}
+          {['About', 'Photos', 'Videos'].includes(activeTab) && (
+            <div className="bg-white p-4 rounded-xl shadow-sm border mb-4 py-20 text-center text-gray-500 italic text-sm">
+              {activeTab} content coming soon.
+            </div>
+          )}
         </div>
       </div>
     </div>
