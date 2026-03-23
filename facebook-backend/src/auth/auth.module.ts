@@ -14,11 +14,13 @@ import {
   VerificationTokenSchema,
 } from 'models/auth';
 import { JwtModule } from '@nestjs/jwt';
+import { Profile, ProfileSchema } from 'models/profile/profile.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
+      { name: Profile.name, schema: ProfileSchema },
       { name: VerificationToken.name, schema: VerificationTokenSchema },
       { name: AccessToken.name, schema: AccessTokenSchema },
       { name: RefreshToken.name, schema: RefreshTokenSchema },

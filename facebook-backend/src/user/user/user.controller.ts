@@ -1,9 +1,9 @@
-import { Controller, Get, Req, UseGuards, Patch, Body, UploadedFiles, Param, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards, Patch, Body, UploadedFiles, Param, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { ErrorResponse } from 'src/utils/responses';
 import { UserService } from './user.service';
 import { Request } from 'express';
-import { GetUserProfileResDTO, UpdateProfileReqDto } from './user-dto';
+import { GetUserProfileResDTO, UpdateProfileReqDto, SearchUserDto } from './user-dto';
 import { AuthGuard } from 'src/middlewares';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
@@ -75,5 +75,14 @@ export class UserController {
   @Get('/profile/:username')
   async getPublicProfile(@Param('username') username: string) {
     return this.userService.getPublicProfile(username);
+  }
+  
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @ApiResponse({ status: 200, description: 'Search results' })
+  @Get('/search')
+  async searchUsers(@Req() req: Request, @Query() searchDto: SearchUserDto) {
+    const userId = req['user'].id;
+    return this.userService.searchUsers(searchDto.q, userId);
   }
 }

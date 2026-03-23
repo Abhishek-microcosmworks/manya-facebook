@@ -1,45 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsEmail,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-} from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsOptional } from 'class-validator';
 import { ROLE_VALUES, User } from 'models/user/user.schema';
 
 export class UserProfileDto {
-  @ApiProperty({
-    example: '123',
-  })
+  @ApiProperty({ example: '123' })
   id: string;
 
-  @ApiProperty({
-    example: 'John Doe',
-  })
+  @ApiProperty({ example: 'John Doe' })
   name: string;
 
-  @ApiProperty({
-    example: 'john.doe@example.com',
-  })
+  @ApiProperty({ example: 'john.doe@example.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({
-    example: true,
-  })
+  @ApiProperty({ example: true })
   @IsBoolean()
   isEmailVerified: boolean;
 
-  @ApiProperty({
-    example: true,
-  })
+  @ApiProperty({ example: false })
   @IsBoolean()
   isDeleted: boolean;
 
-  @ApiProperty({
-    example: true,
-  })
+  @ApiProperty({ example: true })
   @IsBoolean()
   isAccountCompleted: boolean;
 
@@ -50,8 +32,17 @@ export class UserProfileDto {
   @ApiProperty({ example: 'john.doe' })
   username: string;
 
-  @ApiProperty({ example: 'Software Developer' })
+  @ApiProperty({ example: 'Software Developer at Microcosmworks' })
+  @IsOptional()
   bio: string;
+
+  @ApiProperty({ example: 'San Francisco, CA' })
+  @IsOptional()
+  location: string;
+
+  @ApiProperty({ example: 'https://johndoe.dev' })
+  @IsOptional()
+  website: string;
 
   @ApiProperty({ example: 'https://s3.amazonaws.com/bucket/profile.jpg' })
   profilePic: string;
@@ -62,22 +53,32 @@ export class UserProfileDto {
   @ApiProperty({ example: 150 })
   friendCount: number;
 
-  static transform(object: User): UserProfileDto {
-    const transformedObj: UserProfileDto = new UserProfileDto();
+  static transform(object: any): UserProfileDto {
+    const dto = new UserProfileDto();
 
-    transformedObj.id = object._id.toString();
-    transformedObj.email = object.email;
-    transformedObj.name = object.name;
-    transformedObj.username = object.username || '';
-    transformedObj.bio = object.bio || '';
-    transformedObj.profilePic = object.profilePic || '';
-    transformedObj.coverPic = object.coverPic || '';
-    transformedObj.friendCount = object.friendCount || 0;
-    transformedObj.isEmailVerified = object.isEmailVerified;
-    transformedObj.isAccountCompleted = object.isAccountCompleted;
-    transformedObj.isDeleted = object.isDeleted;
-    transformedObj.role = object.role;
+    dto.id = object._id.toString();
+    dto.email = object.email;
+    dto.name = object.name;
+    dto.username = object.username || '';
+    dto.isEmailVerified = object.isEmailVerified;
+    dto.isAccountCompleted = object.isAccountCompleted;
+    dto.isDeleted = object.isDeleted;
+    dto.role = object.role;
 
-    return transformedObj;
+    if (object.profile) {
+      dto.bio = object.profile.bio || '';
+      dto.location = object.profile.location || '';
+      dto.website = object.profile.website || '';
+      dto.profilePic = object.profile.profile_pic_id?.url || '';
+      dto.coverPic = object.profile.cover_media_id?.url || '';
+    } else {
+      dto.bio = '';
+      dto.location = '';
+      dto.website = '';
+      dto.profilePic = '';
+      dto.coverPic = '';
+    }
+
+    return dto;
   }
 }
