@@ -50,8 +50,7 @@ export class PostsService {
           pipeline: [
             { $match: { user_id: { $in: matchIds }, ...dateFilter } },
             { $lookup: { from: 'posts', localField: 'post_id', foreignField: '_id', as: 'original' } },
-            // SAFE UNWIND: Prevents reposts from disappearing if the original post is missing
-            { $unwind: { path: '$original', preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: '$original'} },
             { $match: { 'original.privacy': { $ne: 'private' } } },
             { $addFields: { feed_type: 'repost', original_post: '$original' } },
             { $project: { original: 0 } }
