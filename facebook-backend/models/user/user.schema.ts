@@ -37,6 +37,7 @@ export class User extends Document {
   @Prop({
     type: String,
     required: false,
+    index: true,
     minlength: [3, 'name must be of atleast 3 letters !!'],
   })
   name: string;
