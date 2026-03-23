@@ -22,6 +22,17 @@ export class Like extends Document {
 export const LikeSchema = SchemaFactory.createForClass(Like);
 
 // Production constraints: A user can only like a specific entity once
-LikeSchema.index({ user_id: 1, post_id: 1 }, { unique: true, sparse: true });
-LikeSchema.index({ user_id: 1, comment_id: 1 }, { unique: true, sparse: true });
-LikeSchema.index({ user_id: 1, commentReply_id: 1 }, { unique: true, sparse: true });
+LikeSchema.index(
+  { user_id: 1, post_id: 1 }, 
+  { unique: true, partialFilterExpression: { post_id: { $exists: true } } }
+);
+
+LikeSchema.index(
+  { user_id: 1, comment_id: 1 }, 
+  { unique: true, partialFilterExpression: { comment_id: { $exists: true } } }
+);
+
+LikeSchema.index(
+  { user_id: 1, commentReply_id: 1 }, 
+  { unique: true, partialFilterExpression: { commentReply_id: { $exists: true } } }
+);
