@@ -14,7 +14,7 @@ export class PostsController {
   constructor(
     private readonly postsService: PostsService,
     private readonly interactionsService: InteractionsService
-  ) {}
+  ) { }
 
   @Post()
   async createPost(@Req() req: Request, @Body() dto: CreatePostDto) {
@@ -24,8 +24,8 @@ export class PostsController {
   @Get('timeline')
   async getTimeline(@Req() req: Request, @Query('limit') limit?: number, @Query('cursor') cursor?: string) {
     return this.postsService.getTimeline(
-      req['user'].id, 
-      limit ? parseInt(limit.toString()) : 20, 
+      req['user'].id,
+      limit ? parseInt(limit.toString()) : 20,
       cursor ? new Date(cursor) : undefined
     );
   }
@@ -33,10 +33,15 @@ export class PostsController {
   @Get('user/:userId')
   async getUserFeed(@Param('userId') userId: string, @Query('limit') limit?: number, @Query('cursor') cursor?: string) {
     return this.postsService.getUserFeed(
-      userId, 
-      limit ? parseInt(limit.toString()) : 20, 
+      userId,
+      limit ? parseInt(limit.toString()) : 20,
       cursor ? new Date(cursor) : undefined
     );
+  }
+
+  @Get('saved')
+  async getSavedPosts(@Req() req: Request) {
+    return this.interactionsService.getSavedPosts(req['user'].id);
   }
 
   @Get(':postId')
@@ -47,6 +52,16 @@ export class PostsController {
   @Delete(':postId')
   async deletePost(@Req() req: Request, @Param('postId') postId: string) {
     return this.postsService.deletePost(req['user'].id, postId);
+  }
+
+  @Post(':id/save')
+  async savePost(@Req() req: Request, @Param('id') id: string) {
+    return this.interactionsService.savePost(req['user'].id, id);
+  }
+
+  @Delete(':id/save')
+  async unsavePost(@Req() req: Request, @Param('id') id: string) {
+    return this.interactionsService.unsavePost(req['user'].id, id);
   }
 
   // ================= SIMPLIFIED INTERACTIONS =================
@@ -91,7 +106,7 @@ export class PostsController {
 @UseGuards(AuthGuard)
 @Controller('comments')
 export class CommentsController {
-  constructor(private readonly interactionsService: InteractionsService) {}
+  constructor(private readonly interactionsService: InteractionsService) { }
 
   @Delete(':id')
   async deleteComment(@Req() req: Request, @Param('id') id: string) {

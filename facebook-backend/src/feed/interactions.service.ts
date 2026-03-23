@@ -7,6 +7,7 @@ import { Reply } from 'models/feed/reply.schema';
 import { Like } from 'models/feed/like.schema';
 import { Repost } from 'models/feed/repost.schema';
 import { Share } from 'models/feed/share.schema';
+import { SavedPost } from 'models/feed/saved-post.schema';
 
 @Injectable()
 export class InteractionsService {
@@ -17,6 +18,7 @@ export class InteractionsService {
     @InjectModel(Like.name) private likeModel: Model<Like>,
     @InjectModel(Repost.name) private repostModel: Model<Repost>,
     @InjectModel(Share.name) private shareModel: Model<Share>,
+    @InjectModel(SavedPost.name) private savedPostModel: Model<SavedPost>
   ) { }
 
   // ===================== LIKES =====================
@@ -140,5 +142,44 @@ export class InteractionsService {
       .populate('user_id', 'name username profile')
       .sort({ created_at: 1 }) // Chronological order is standard for replies
       .lean();
+  }
+
+  async savePost(userId: string, postId: string) {
+    try {
+      const savedPost = await this.savedPostModel.create({
+        user_id: new Types.ObjectId(userId),
+        post_id: new Types.ObjectId(postId)
+      });
+      return { success: true, message: 'Post saved successfully', savedPost };
+    } catch (e: any) {
+      if (e.code === 11000) throw new ConflictException('Post is already saved');
+      throw e;
+    }
+  }
+
+  async unsavePost(userId: string, postId: string) {
+    const result = await this.savedPostModel.deleteOne({
+      user_id: new Types.ObjectId(userId),
+      post_id: new Types.ObjectId(postId)
+    });
+
+    if (result.deletedCount === 0) throw new NotFoundException('Saved post not found');
+    return { success: true, message: 'Post unsaved successfully' };
+  }
+  async getSavedPosts(userId: string) {
+    const savedPosts = await this.savedPostModel.find({ user_id: new Types.ObjectId(userId) })
+      .populate({
+        path: 'post_id',
+        populate: { path: 'user_id', select: 'name username profile' } // Hydrate the author details
+      })
+      .sort({ created_at: -1 }) // Newest saves first
+      .lean();
+
+    // Map the result to return a clean structure
+    return savedPosts.map(sp => ({
+      _id: sp._id,
+      saved_at: sp.created_at,
+      post: sp.post_id
+    }));
   }
 }
