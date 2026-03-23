@@ -14,7 +14,8 @@ export class PostsService {
 
   async createPost(userId: string, dto: CreatePostDto) {
     const post = await this.postModel.create({
-      user_id: userId,
+      // user_id: userId,
+      user_id: new Types.ObjectId(userId),
       content: dto.content,
       privacy: dto.privacy,
       media_id: dto.media_id ? new Types.ObjectId(dto.media_id) : undefined,
@@ -36,7 +37,11 @@ export class PostsService {
       .find({ user_id: userId })
       .distinct('friend_id');
 
-    const matchIds = [userId, ...friends.map(id => id.toString())];
+    // const matchIds = [userId, ...friends.map(id => id.toString())];
+    const matchIds = [
+      new Types.ObjectId(userId),
+      ...friends.map(id => new Types.ObjectId(id.toString()))
+    ];
 
     const dateFilter = cursor ? { created_at: { $lt: new Date(cursor) } } : {};
 
@@ -50,8 +55,10 @@ export class PostsService {
           pipeline: [
             { $match: { user_id: { $in: matchIds }, ...dateFilter } },
             { $lookup: { from: 'posts', localField: 'post_id', foreignField: '_id', as: 'original' } },
-            { $unwind: { path: '$original'} },
+            { $unwind: { path: '$original' } },
             { $match: { 'original.privacy': { $ne: 'private' } } },
+            { $lookup: { from: 'users', localField: 'original.user_id', foreignField: '_id', as: 'original.author' } },
+            { $unwind: { path: '$original.author', preserveNullAndEmptyArrays: true } },
             { $addFields: { feed_type: 'repost', original_post: '$original' } },
             { $project: { original: 0 } }
           ]
@@ -74,7 +81,8 @@ export class PostsService {
         $project: {
           'author.password_hash': 0,
           'author.email': 0,
-          'original_post.author.password_hash': 0
+          'original_post.author.password_hash': 0,
+          'original_post.author.email': 0
         }
       }
     ];
@@ -86,7 +94,8 @@ export class PostsService {
 
   // get posts of user
   async getUserFeed(targetUserId: string, limit: number = 20, cursor?: Date) {
-    const matchIds = [targetUserId];
+    // const matchIds = [targetUserId];
+    const matchIds = [new Types.ObjectId(targetUserId)];
 
     const dateFilter = cursor ? { created_at: { $lt: new Date(cursor) } } : {};
 
@@ -101,6 +110,8 @@ export class PostsService {
             { $lookup: { from: 'posts', localField: 'post_id', foreignField: '_id', as: 'original' } },
             { $unwind: '$original' },
             { $match: { 'original.privacy': { $ne: 'private' } } },
+            { $lookup: { from: 'users', localField: 'original.user_id', foreignField: '_id', as: 'original.author' } },
+            { $unwind: { path: '$original.author', preserveNullAndEmptyArrays: true } },
             { $addFields: { feed_type: 'repost', original_post: '$original' } },
             { $project: { original: 0 } }
           ]

@@ -59,7 +59,7 @@ export class InteractionsService {
       throw e;
     }
   }
-  
+
   async unlikeComment(userId: string, commentId: string) {
     const result = await this.likeModel.deleteOne({ user_id: userId, comment_id: commentId });
     if (result.deletedCount > 0) {
@@ -104,7 +104,11 @@ export class InteractionsService {
   // ===================== REPOSTS & SHARES =====================
   async repost(userId: string, postId: string) {
     try {
-      const repost = await this.repostModel.create({ user_id: userId, post_id: postId });
+      // const repost = await this.repostModel.create({ user_id: userId, post_id: postId });
+      const repost = await this.repostModel.create({
+        user_id: new Types.ObjectId(userId),
+        post_id: new Types.ObjectId(postId)
+      });
       return { success: true, message: 'Reposted successfully', repost };
     } catch (e: any) {
       if (e.code === 11000) throw new ConflictException('Already reposted');
