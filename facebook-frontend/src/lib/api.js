@@ -25,7 +25,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest(path, { method = 'GET', body, token } = {}) {
+export async function apiRequest(path, { method = 'GET', body, token, signal } = {}) {
   const base = getBaseUrl();
   const baseWithSlash = base.endsWith('/') ? base : `${base}/`;
   const relativePath = String(path || '').replace(/^\/+/, '');
@@ -42,6 +42,7 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
     method,
     headers,
     body: isFormData ? body : (body === undefined ? undefined : JSON.stringify(body)),
+    signal,
   });
 
   const data = await parseJsonSafe(res);

@@ -105,7 +105,14 @@ export default function PostCard({ post }) {
           )}
         </div>
         <div className="flex gap-3">
-          {renderData.comments_count > 0 && <span className="hover:underline cursor-pointer">{renderData.comments_count} Comments</span>}
+          {renderData.comments_count > 0 && (
+            <span 
+              onClick={() => setShowComments(true)} 
+              className="hover:underline cursor-pointer"
+            >
+              {renderData.comments_count} Comments
+            </span>
+          )}
         </div>
       </div>
 
