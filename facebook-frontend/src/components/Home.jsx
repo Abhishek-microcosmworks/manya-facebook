@@ -9,6 +9,7 @@ import {
   HomeIcon, UserGroupIcon, VideoCameraIcon, BuildingStorefrontIcon, NewspaperIcon, MagnifyingGlassIcon, ChatBubbleLeftEllipsisIcon, BellIcon,
   PlusIcon, PhotoIcon, FaceSmileIcon, VideoCameraIcon as LiveVideoIcon
 } from '@heroicons/react/24/solid';
+import { BookmarkIcon as BookmarkIconSolid } from '@heroicons/react/24/solid';
 
 export default function Home() {
   const { user, logout, accessToken } = useAuth();
@@ -167,6 +168,11 @@ export default function Home() {
           <ul className="space-y-1">
             <SidebarItem to={`/profile/${user?.username}`} img={user?.profilePic} label={user?.name} />
             <SidebarItem icon={<UserGroupIcon className="h-9 w-9 text-[#1877f2]" />} label="Friends" />
+            <SidebarItem
+              to={`/profile/${user?.username}?tab=Saved`}
+              icon={<BookmarkIconSolid className="h-9 w-9 text-[#a033ff]" />}
+              label="Saved"
+            />
             <SidebarItem icon={<VideoCameraIcon className="h-9 w-9 text-[#1877f2]" />} label="Watch" />
             <SidebarItem icon={<NewspaperIcon className="h-9 w-9 text-[#1877f2]" />} label="Feeds" />
             <SidebarItem icon={<BuildingStorefrontIcon className="h-9 w-9 text-[#1877f2]" />} label="Marketplace" />
@@ -213,7 +219,7 @@ export default function Home() {
               </div>
             ) : (
               posts.map(post => (
-                <PostCard key={post._id + post.feed_type} post={post} />
+                <PostCard key={post._id + post.feed_type} post={post} initiallySaved={!!post.is_saved} />
               ))
             )}
           </div>

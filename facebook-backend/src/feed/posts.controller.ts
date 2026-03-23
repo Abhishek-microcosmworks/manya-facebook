@@ -31,9 +31,10 @@ export class PostsController {
   }
 
   @Get('user/:userId')
-  async getUserFeed(@Param('userId') userId: string, @Query('limit') limit?: number, @Query('cursor') cursor?: string) {
+  async getUserFeed(@Req() req: Request, @Param('userId') userId: string, @Query('limit') limit?: number, @Query('cursor') cursor?: string) {
     return this.postsService.getUserFeed(
-      userId,
+      req['user'].id, // viewer id (used to compute is_saved)
+      userId, // target profile id (feed owner)
       limit ? parseInt(limit.toString()) : 20,
       cursor ? new Date(cursor) : undefined
     );

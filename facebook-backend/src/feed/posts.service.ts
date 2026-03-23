@@ -33,6 +33,9 @@ export class PostsService {
 
   // get posts of friends and user
   async getTimeline(userId: string, limit: number = 20, cursor?: Date) {
+    const viewerUserId = userId;
+    const viewerUserObjId = new Types.ObjectId(viewerUserId);
+
     const friends = await this.friendModel
       .find({ user_id: userId })
       .distinct('friend_id');
@@ -87,13 +90,57 @@ export class PostsService {
       }
     ];
 
+    // Add saved-status for the viewer, so the UI can render bookmark state without conflicts.
+    pipeline.push(
+      {
+        $addFields: {
+          // For reposts we save/unsave based on the original post id.
+          target_post_id: {
+            $cond: [
+              { $eq: ['$feed_type', 'repost'] },
+              '$original_post._id',
+              '$_id'
+            ]
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'savedposts',
+          let: { postId: '$target_post_id', userId: viewerUserObjId },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$post_id', '$$postId'] },
+                    { $eq: ['$user_id', '$$userId'] }
+                  ]
+                }
+              }
+            },
+            { $limit: 1 }
+          ],
+          as: 'saved_hit'
+        }
+      },
+      {
+        $addFields: {
+          is_saved: { $gt: [{ $size: '$saved_hit' }, 0] }
+        }
+      },
+      { $project: { saved_hit: 0, target_post_id: 0 } }
+    );
+
     const result = await this.postModel.aggregate(pipeline);
     // console.log('Timeline Result count:', result.length);
     return result;
   }
 
   // get posts of user
-  async getUserFeed(targetUserId: string, limit: number = 20, cursor?: Date) {
+  async getUserFeed(viewerUserId: string, targetUserId: string, limit: number = 20, cursor?: Date) {
+    const viewerUserObjId = new Types.ObjectId(viewerUserId);
+
     // const matchIds = [targetUserId];
     const matchIds = [new Types.ObjectId(targetUserId)];
 
@@ -133,6 +180,47 @@ export class PostsService {
         }
       }
     ];
+
+    // Add saved-status for the viewer, so the UI can render bookmark state correctly on refresh.
+    pipeline.push(
+      {
+        $addFields: {
+          target_post_id: {
+            $cond: [
+              { $eq: ['$feed_type', 'repost'] },
+              '$original_post._id',
+              '$_id'
+            ]
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'savedposts',
+          let: { postId: '$target_post_id', userId: viewerUserObjId },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$post_id', '$$postId'] },
+                    { $eq: ['$user_id', '$$userId'] }
+                  ]
+                }
+              }
+            },
+            { $limit: 1 }
+          ],
+          as: 'saved_hit'
+        }
+      },
+      {
+        $addFields: {
+          is_saved: { $gt: [{ $size: '$saved_hit' }, 0] }
+        }
+      },
+      { $project: { saved_hit: 0, target_post_id: 0 } }
+    );
 
     const result = await this.postModel.aggregate(pipeline);
     // console.log('UserFeed Result count:', result.length);
