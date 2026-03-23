@@ -8,13 +8,15 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ThirdPartyModule } from 'src/third-party/third-party.module';
 import { Profile, ProfileSchema } from 'models/profile/profile.schema';
 import { Media, MediaSchema } from 'models/media/media.schema';
+import { Block, BlockSchema } from 'models/friends/block.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Profile.name, schema: ProfileSchema },
-      { name: Media.name, schema: MediaSchema }
+      { name: Media.name, schema: MediaSchema },
+      { name: Block.name, schema: BlockSchema }
     ]),
     CommonModule,
     AuthModule,
@@ -23,4 +25,4 @@ import { Media, MediaSchema } from 'models/media/media.schema';
   providers: [UserService],
   controllers: [UserController],
 })
-export class UserModule {}
+export class UserModule { }
