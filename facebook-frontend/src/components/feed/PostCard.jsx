@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../../lib/api';
 import { useAuth } from '../../auth/AuthContext';
-import { UserIcon, HandThumbUpIcon, ChatBubbleLeftIcon, ShareIcon } from '@heroicons/react/24/outline';
+import { UserIcon, HandThumbUpIcon, ChatBubbleLeftIcon, ShareIcon, ArrowPathRoundedSquareIcon } from '@heroicons/react/24/outline';
 import { HandThumbUpIcon as HandThumbUpIconSolid } from '@heroicons/react/24/solid';
 import { formatDistanceToNow } from 'date-fns';
 import CommentSection from './CommentSection';
@@ -58,22 +58,27 @@ export default function PostCard({ post }) {
     <div className="bg-white rounded-xl shadow-sm border mb-4">
       {isRepost && (
         <div className="px-4 pt-3 flex items-center gap-2 text-sm text-gray-500 font-semibold">
-          <ShareIcon className="w-4 h-4" />
-          <span>{post.author?.name} reposted</span>
+          <ArrowPathRoundedSquareIcon className="w-4 h-4" />
+          <Link to={`/profile/${post.author?.username}`} className="hover:underline">
+            {post.author?.name}
+          </Link>
+          <span>reposted</span>
         </div>
       )}
 
       {/* Header */}
       <div className="flex items-center gap-3 p-4">
-        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 cursor-pointer">
+        <Link to={`/profile/${author?.username}`} className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 cursor-pointer">
           {author?.profile?.profile_pic_id?.url ? (
             <img src={author.profile.profile_pic_id.url} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
             <UserIcon className="w-6 h-6 text-gray-400 mx-auto mt-2" />
           )}
-        </div>
+        </Link>
         <div>
-          <h3 className="font-bold text-gray-900 cursor-pointer hover:underline">{author?.name}</h3>
+          <Link to={`/profile/${author?.username}`} className="font-bold text-gray-900 cursor-pointer hover:underline">
+            {author?.name}
+          </Link>
           <p className="text-xs text-gray-500">
             {formatDistanceToNow(new Date(renderData.created_at), { addSuffix: true })} • {renderData.privacy}
           </p>
@@ -138,7 +143,7 @@ export default function PostCard({ post }) {
           onClick={handleRepost}
           className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-gray-600 hover:bg-gray-100 transition"
         >
-          <ShareIcon className="w-5 h-5" />
+          <ArrowPathRoundedSquareIcon className="w-5 h-5" />
           Repost
         </button>
       </div>
