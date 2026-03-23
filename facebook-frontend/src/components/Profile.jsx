@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { apiRequest } from '../lib/api';
 import {
@@ -8,6 +8,7 @@ import {
 import EditProfileModal from './EditProfileModal';
 import FriendsTab from './FriendsTab';
 import PostCard from './feed/PostCard';
+import SavedPosts from './feed/SavedPosts';
 import CreatePostModal from './feed/CreatePostModal';
 
 export default function Profile() {
@@ -21,13 +22,20 @@ export default function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [friendStatus, setFriendStatus] = useState('none'); // 'none', 'pending_sent', 'pending_received', 'friends', 'blocked'
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeTab, setActiveTab] = useState('Posts');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(() => tabFromUrl || 'Posts');
 
   const [posts, setPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const isOwner = currentUser?.username === username;
+  useEffect(() => {
+    const validTabs = isOwner ? ['Posts', 'About', 'Friends', 'Saved', 'Photos', 'Videos'] : ['Posts', 'About', 'Friends', 'Photos', 'Videos'];
+    if (tabFromUrl && validTabs.includes(tabFromUrl)) setActiveTab(tabFromUrl);
+    else setActiveTab('Posts');
+  }, [tabFromUrl, isOwner]);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -371,10 +379,16 @@ export default function Profile() {
 
             {/* Tabs */}
             <div className="flex px-4 md:px-8 py-1 overflow-x-auto">
-              {['Posts', 'About', 'Friends', 'Photos', 'Videos'].map((tab) => (
+              {(isOwner
+                ? ['Posts', 'About', 'Friends', 'Saved', 'Photos', 'Videos']
+                : ['Posts', 'About', 'Friends', 'Photos', 'Videos']
+              ).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setSearchParams(tab === 'Posts' ? {} : { tab });
+                  }}
                   className={`px-4 py-3 font-semibold text-sm border-b-4 hover:bg-gray-100 rounded-md transition whitespace-nowrap
                   ${activeTab === tab ? 'text-[#1877f2] border-b-[#1877f2] hover:bg-transparent' : 'border-transparent text-gray-600'}`}
                 >
@@ -472,7 +486,7 @@ export default function Profile() {
                   </div>
                 ) : (
                   posts.map(post => (
-                    <PostCard key={post._id + post.feed_type} post={post} />
+                    <PostCard key={post._id + post.feed_type} post={post} initiallySaved={!!post.is_saved} />
                   ))
                 )}
               </div>
@@ -480,6 +494,16 @@ export default function Profile() {
 
             {activeTab === 'Friends' && (
               <FriendsTab profileId={profile.id} isOwner={isOwner} />
+            )}
+
+            {activeTab === 'Saved' && isOwner && (
+              <SavedPosts />
+            )}
+
+            {activeTab === 'Saved' && !isOwner && (
+              <div className="bg-white p-4 rounded-xl shadow-sm border mb-4 py-20 text-center text-gray-500 italic text-sm">
+                Only you can see what you've saved.
+              </div>
             )}
 
             {/* Placeholders for other tabs */}
