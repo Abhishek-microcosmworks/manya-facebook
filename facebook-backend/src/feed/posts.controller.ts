@@ -103,6 +103,11 @@ export class CommentsController {
     return this.interactionsService.likeComment(req['user'].id, id);
   }
 
+  @Delete(':id/like')
+  async unlikeComment(@Req() req: Request, @Param('id') id: string) {
+    return this.interactionsService.unlikeComment(req['user'].id, id);
+  }
+
   @Post(':id/reply')
   async createReply(@Req() req: Request, @Param('id') id: string, @Body() dto: CreateReplyDto) {
     return this.interactionsService.createReply(req['user'].id, id, dto.content);

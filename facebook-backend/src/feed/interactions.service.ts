@@ -59,6 +59,14 @@ export class InteractionsService {
       throw e;
     }
   }
+  
+  async unlikeComment(userId: string, commentId: string) {
+    const result = await this.likeModel.deleteOne({ user_id: userId, comment_id: commentId });
+    if (result.deletedCount > 0) {
+      await this.commentModel.updateOne({ _id: commentId }, { $inc: { likes_count: -1 } });
+    }
+    return { success: true, message: 'Comment unliked' };
+  }
 
   // ===================== COMMENTS =====================
   async createComment(userId: string, postId: string, content: string) {
