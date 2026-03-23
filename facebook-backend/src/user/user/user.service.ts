@@ -12,6 +12,7 @@ import { User } from 'models/user';
 import { AwsS3Service } from 'src/third-party/aws/s3.service';
 import { Profile } from 'models/profile/profile.schema';
 import { Media, MediaUsage } from 'models/media/media.schema';
+import { Block } from 'models/friends/block.schema';
 
 @Injectable()
 export class UserService {
@@ -22,6 +23,8 @@ export class UserService {
     private readonly profileModel: Model<Profile>,
     @InjectModel(Media.name)
     private readonly mediaModel: Model<Media>,
+    @InjectModel(Block.name)
+    private readonly blockModel: Model<Block>,
     private readonly s3Service: AwsS3Service,
   ) { }
 
@@ -154,8 +157,8 @@ export class UserService {
     await Promise.all([
       Object.keys(userUpdates).length
         ? this.userModel.findByIdAndUpdate(userId, userUpdates, {
-            runValidators: true,
-          })
+          runValidators: true,
+        })
         : Promise.resolve(),
       profileMutated ? profile.save() : Promise.resolve(),
     ]);
@@ -171,25 +174,44 @@ export class UserService {
     // 2. Optimized Regex: Using '^' (starts with) is much faster because it 
     // allows MongoDB to use B-Tree indexes efficiently, unlike global /query/ searches.
     // We fall back to global search if you prefer, but prefix is production-standard.
-    const searchRegex = new RegExp(`^${sanitizedQuery}`, 'i'); 
+    const searchRegex = new RegExp(`^${sanitizedQuery}`, 'i');
 
+    // Fetch all block relationships
+    const blockList = await this.blockModel.find({
+      $or: [
+        { user_id: currentUserId },        // Users I blocked
+        { blocked_user_id: currentUserId } // Users who blocked me
+      ]
+    }).select('user_id blocked_user_id').lean();
+
+    // Extract IDs into a flat array of ObjectIds
+    const excludedIds: any[] = [new Types.ObjectId(currentUserId)]; // Exclude self
+
+    blockList.forEach(block => {
+      if (block.user_id.toString() === currentUserId) {
+        excludedIds.push(block.blocked_user_id);
+      } else {
+        excludedIds.push(block.user_id);
+      }
+    });
     const users = await this.userModel.find({
-      _id: { $ne: new Types.ObjectId(currentUserId) },
+      // _id: { $ne: new Types.ObjectId(currentUserId) },
+      _id: { $nin: excludedIds }, // Exclude blocked users
       isDeleted: false,
       $or: [
         { username: searchRegex },
-        { name: searchRegex } 
+        { name: searchRegex }
       ]
     })
-    .select('name username profile') // Only fetch what is strictly needed
-    .populate({
-      path: 'profile',
-      select: 'profile_pic_id',
-      populate: { path: 'profile_pic_id', select: 'url' }
-    })
-    .limit(8) // Strict limit to keep API fast and payloads tiny
-    .lean()   // Bypasses Mongoose hydration for maximum read performance
-    .exec();
+      .select('name username profile') // Only fetch what is strictly needed
+      .populate({
+        path: 'profile',
+        select: 'profile_pic_id',
+        populate: { path: 'profile_pic_id', select: 'url' }
+      })
+      .limit(8) // Strict limit to keep API fast and payloads tiny
+      .lean()   // Bypasses Mongoose hydration for maximum read performance
+      .exec();
 
     return users.map((u: any) => ({
       id: u._id,
