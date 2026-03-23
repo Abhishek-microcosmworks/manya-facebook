@@ -162,4 +162,40 @@ export class UserService {
 
     return this.getUserProfile({ _id: userId } as User);
   }
+
+  async searchUsers(query: string, currentUserId: string): Promise<any[]> {
+    // 1. Sanitize the query to prevent Regex Denial of Service (ReDoS)
+    // This escapes special characters like .*+?^${}()|[]\
+    const sanitizedQuery = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+
+    // 2. Optimized Regex: Using '^' (starts with) is much faster because it 
+    // allows MongoDB to use B-Tree indexes efficiently, unlike global /query/ searches.
+    // We fall back to global search if you prefer, but prefix is production-standard.
+    const searchRegex = new RegExp(`^${sanitizedQuery}`, 'i'); 
+
+    const users = await this.userModel.find({
+      _id: { $ne: new Types.ObjectId(currentUserId) },
+      isDeleted: false,
+      $or: [
+        { username: searchRegex },
+        { name: searchRegex } 
+      ]
+    })
+    .select('name username profile') // Only fetch what is strictly needed
+    .populate({
+      path: 'profile',
+      select: 'profile_pic_id',
+      populate: { path: 'profile_pic_id', select: 'url' }
+    })
+    .limit(8) // Strict limit to keep API fast and payloads tiny
+    .lean()   // Bypasses Mongoose hydration for maximum read performance
+    .exec();
+
+    return users.map((u: any) => ({
+      id: u._id,
+      name: u.name,
+      username: u.username,
+      profilePic: u.profile?.profile_pic_id?.url || ''
+    }));
+  }
 }

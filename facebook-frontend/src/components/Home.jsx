@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useUserSearch } from '../hooks/useUserSearch';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { apiRequest } from '../lib/api';
@@ -12,6 +13,32 @@ export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const searchRef = useRef(null);
+  const { results, isLoading, setResults } = useUserSearch(searchQuery, accessToken);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleInputChange = (e) => {
+    setSearchQuery(e.target.value);
+    setIsDropdownOpen(true);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setResults([]);
+    setIsDropdownOpen(false);
+  };
 
   const fetchTimeline = useCallback(async () => {
     if (!accessToken) return;
@@ -37,14 +64,58 @@ export default function Home() {
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1877f2] text-2xl font-bold text-white select-none">
             f
           </div>
-          <div className="hidden items-center gap-2 rounded-full bg-[#f0f2f5] px-3 py-2 lg:flex">
+         {/* Search Container */}
+        <div className="relative hidden lg:block" ref={searchRef}>
+          <div className="flex items-center gap-2 rounded-full bg-[#f0f2f5] px-3 py-2">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
-            <input 
-              type="text" 
-              placeholder="Search Facebook" 
-              className="bg-transparent text-[15px] outline-none placeholder:text-gray-500" 
+            <input
+              type="text"
+              placeholder="Search Facebook"
+              value={searchQuery}
+              onChange={handleInputChange}
+              onFocus={() => setIsDropdownOpen(true)}
+              className="bg-transparent text-[15px] outline-none placeholder:text-gray-500 w-[240px]"
             />
           </div>
+
+          {/* Dropdown Results */}
+          {isDropdownOpen && searchQuery.trim().length >= 2 && (
+            <div className="absolute top-full left-0 mt-2 w-full min-w-[300px] bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto z-50">
+              
+              {isLoading && (
+                <div className="p-4 text-center text-gray-500 text-sm flex justify-center items-center">
+                  <div className="w-4 h-4 border-2 border-[#1877f2] border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Searching...
+                </div>
+              )}
+
+              {!isLoading && results.length === 0 && (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No users found for "{searchQuery}"
+                </div>
+              )}
+
+              {!isLoading && results.length > 0 && results.map((u) => (
+                <Link
+                  key={u.id}
+                  to={`/profile/${u.username}`}
+                  onClick={clearSearch}
+                  className="flex items-center p-3 hover:bg-gray-100 transition-colors border-b border-gray-50 last:border-0"
+                >
+                  <img
+                    src={u.profilePic || 'https://via.placeholder.com/40'}
+                    alt={u.name}
+                    className="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200"
+                  />
+                  <div>
+                    <div className="font-semibold text-gray-900 text-sm">{u.name}</div>
+                    <div className="text-xs text-gray-500">@{u.username}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
         </div>
 
         {/* Center: Main Nav (Desktop) */}
