@@ -5,6 +5,7 @@ import { UserIcon, HandThumbUpIcon, ChatBubbleLeftIcon, ShareIcon, ArrowPathRoun
 import { HandThumbUpIcon as HandThumbUpIconSolid } from '@heroicons/react/24/solid';
 import { formatDistanceToNow } from 'date-fns';
 import CommentSection from './CommentSection';
+import { Link } from 'react-router-dom';
 
 export default function PostCard({ post }) {
   const { user: currentUser, accessToken } = useAuth();
