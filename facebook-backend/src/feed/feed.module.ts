@@ -7,6 +7,7 @@ import { Like, LikeSchema } from 'models/feed/like.schema';
 import { Repost, RepostSchema } from 'models/feed/repost.schema';
 import { Share, ShareSchema } from 'models/feed/share.schema';
 import { Friendship, FriendshipSchema } from 'models/friends/friendship.schema';
+import { SavedPost, SavedPostSchema } from 'models/feed/saved-post.schema';
 
 import { PostsController, CommentsController } from './posts.controller';
 import { PostsService } from './posts.service';
@@ -24,6 +25,7 @@ import { AuthModule } from 'src/auth/auth.module';
       { name: Repost.name, schema: RepostSchema },
       { name: Share.name, schema: ShareSchema },
       { name: Friendship.name, schema: FriendshipSchema },
+      { name: SavedPost.name, schema: SavedPostSchema },
     ]),
     CommonModule,
     AuthModule,
