@@ -307,7 +307,7 @@ export default function Profile() {
                   <div className="w-full rounded-xl bg-white p-4 shadow-sm border">
                     <div className="flex gap-2">
                       <div className="h-10 w-10 rounded-full bg-gray-300 overflow-hidden shrink-0">
-                        <img src={profile?.profilePic || 'https://via.placeholder.com/150'} alt="me" className="w-full h-full object-cover" />
+                        <img src={profile?.profilePic || `https://ui-avatars.com/api/?name=${profile?.name || 'User'}&background=random`} alt="me" className="w-full h-full object-cover" />
                       </div>
                       <button
                         onClick={() => setIsCreateModalOpen(true)}

@@ -256,7 +256,7 @@ function SidebarItem({ to, icon, img, label }) {
     <div className="flex items-center gap-3 rounded-md p-2 hover:bg-gray-200 transition cursor-pointer">
       {img ? (
         <div className="h-9 w-9 rounded-full bg-gray-300 overflow-hidden shrink-0">
-          <img src={img || 'https://via.placeholder.com/150'} alt={label} className="h-full w-full object-cover" />
+          <img src={img || `https://ui-avatars.com/api/?name=${label || 'User'}&background=random`} alt={label} className="h-full w-full object-cover" />
         </div>
       ) : (
         icon

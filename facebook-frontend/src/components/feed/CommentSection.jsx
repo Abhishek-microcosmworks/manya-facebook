@@ -232,7 +232,7 @@ function CommentItem({ comment, fetchComments }) {
   return (
     <div className="flex gap-2">
       <Link to={`/profile/${comment.user_id?.username}`} className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden shrink-0">
-        <img src={comment.user_id?.profile?.profile_pic_id?.url || 'https://via.placeholder.com/150'} alt="Avatar" className="w-full h-full object-cover" />
+        <img src={comment.user_id?.profile?.profile_pic_id?.url || `https://ui-avatars.com/api/?name=${comment.user_id?.name || 'User'}&background=random`} alt="Avatar" className="w-full h-full object-cover" />
       </Link>
 
       <div className="flex-1">
@@ -260,7 +260,7 @@ function CommentItem({ comment, fetchComments }) {
             {replies.map(reply => (
               <div key={reply._id} className="flex gap-2">
                 <Link to={`/profile/${reply.user_id?.username}`} className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                  <img src={reply.user_id?.profile?.profile_pic_id?.url || 'https://via.placeholder.com/150'} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={reply.user_id?.profile?.profile_pic_id?.url || `https://ui-avatars.com/api/?name=${reply.user_id?.name || 'User'}&background=random`} alt="Avatar" className="w-full h-full object-cover" />
                 </Link>
                 <div className="bg-gray-100 rounded-2xl px-3 py-1.5 inline-block">
                   <Link to={`/profile/${reply.user_id?.username}`} className="block font-bold text-[13px] text-gray-900 hover:underline">{reply.user_id?.name}</Link>
