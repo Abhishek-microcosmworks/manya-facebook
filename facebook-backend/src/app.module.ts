@@ -6,11 +6,14 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user/user.module';
 import { ThirdPartyModule } from './third-party/third-party.module';
 import { CommonModule } from './common/common.module';
+import { FriendsModule } from './friends/friends.module';
+import { FeedModule } from './feed/feed.module';
 import { BootstrapService } from './bootstrap.service';
 import { NetworkService } from './utils/services/network.service';
 import { AppController } from './app.controller';
 import { APIUrlLoggerMiddleware } from './middlewares';
 import { DatabaseConfigService } from 'config';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import { DatabaseConfigService } from 'config';
     UserModule,
     ThirdPartyModule,
     CommonModule,
+    FriendsModule,
+    FeedModule,
+    MediaModule,
   ],
   providers: [BootstrapService, NetworkService],
   controllers: [AppController],
