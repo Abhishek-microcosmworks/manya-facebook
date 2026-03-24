@@ -19,6 +19,12 @@ export default function CreatePostModal({ onClose, onPostCreated }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        setValidationError('Only image, GIF, and video files are allowed.');
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        return;
+      }
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
       setValidationError('');
@@ -134,7 +140,7 @@ export default function CreatePostModal({ onClose, onPostCreated }) {
               >
                 <XMarkIcon className="w-5 h-5 text-gray-600" />
               </button>
-              {selectedFile.type.startsWith('video') ? (
+              {selectedFile?.type?.startsWith('video') ? (
                 <video src={previewUrl} className="w-full max-h-60 object-cover" controls />
               ) : (
                 <img src={previewUrl} alt="Preview" className="w-full max-h-60 object-cover" />
