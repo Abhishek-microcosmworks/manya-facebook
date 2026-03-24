@@ -267,6 +267,7 @@ function SidebarItem({ to, icon, img, label }) {
   return to ? <Link to={to}>{content}</Link> : content;
 }
 
+
 function PostAction({ icon, label }) {
   return (
     <button className="flex flex-1 items-center justify-center gap-2 rounded-md py-2 hover:bg-gray-100 transition">
