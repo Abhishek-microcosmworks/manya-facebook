@@ -19,15 +19,25 @@ export class CreatePostDto {
 }
 
 export class CreateCommentDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   content: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsMongoId()
+  media_id?: string;
 }
 
 export class CreateReplyDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   content: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsMongoId()
+  media_id?: string;
 }

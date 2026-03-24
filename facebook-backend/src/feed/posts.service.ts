@@ -26,6 +26,7 @@ export class PostsService {
   async getPostById(postId: string) {
     const post = await this.postModel.findById(postId)
       .populate('user_id', 'name username profile')
+      .populate('media_id')
       .lean();
     if (!post) throw new NotFoundException('Post not found');
     return post;
@@ -87,7 +88,21 @@ export class PostsService {
           'original_post.author.password_hash': 0,
           'original_post.author.email': 0
         }
-      }
+      },
+      { $lookup: { from: 'media', localField: 'media_id', foreignField: '_id', as: 'media_doc' } },
+      { $unwind: { path: '$media_doc', preserveNullAndEmptyArrays: true } },
+      { $addFields: { media_id: '$media_doc' } },
+      {
+        $lookup: {
+          from: 'media',
+          localField: 'original_post.media_id',
+          foreignField: '_id',
+          as: 'original_post_media_doc'
+        }
+      },
+      { $unwind: { path: '$original_post_media_doc', preserveNullAndEmptyArrays: true } },
+      { $addFields: { 'original_post.media_id': '$original_post_media_doc' } },
+      { $project: { media_doc: 0, original_post_media_doc: 0 } }
     ];
 
     // Add saved-status for the viewer, so the UI can render bookmark state without conflicts.
@@ -178,7 +193,21 @@ export class PostsService {
         $project: {
           'author.password_hash': 0, 'author.email': 0, 'original_post.author.password_hash': 0, 'original_post.author.email': 0
         }
-      }
+      },
+      { $lookup: { from: 'media', localField: 'media_id', foreignField: '_id', as: 'media_doc' } },
+      { $unwind: { path: '$media_doc', preserveNullAndEmptyArrays: true } },
+      { $addFields: { media_id: '$media_doc' } },
+      {
+        $lookup: {
+          from: 'media',
+          localField: 'original_post.media_id',
+          foreignField: '_id',
+          as: 'original_post_media_doc'
+        }
+      },
+      { $unwind: { path: '$original_post_media_doc', preserveNullAndEmptyArrays: true } },
+      { $addFields: { 'original_post.media_id': '$original_post_media_doc' } },
+      { $project: { media_doc: 0, original_post_media_doc: 0 } }
     ];
 
     // Add saved-status for the viewer, so the UI can render bookmark state correctly on refresh.

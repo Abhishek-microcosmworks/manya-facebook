@@ -78,7 +78,7 @@ export class PostsController {
 
   @Post(':id/comment')
   async createComment(@Req() req: Request, @Param('id') id: string, @Body() dto: CreateCommentDto) {
-    return this.interactionsService.createComment(req['user'].id, id, dto.content);
+    return this.interactionsService.createComment(req['user'].id, id, dto);
   }
 
   @Get(':id/comments')
@@ -126,7 +126,7 @@ export class CommentsController {
 
   @Post(':id/reply')
   async createReply(@Req() req: Request, @Param('id') id: string, @Body() dto: CreateReplyDto) {
-    return this.interactionsService.createReply(req['user'].id, id, dto.content);
+    return this.interactionsService.createReply(req['user'].id, id, dto);
   }
 
   @Get(':id/replies')

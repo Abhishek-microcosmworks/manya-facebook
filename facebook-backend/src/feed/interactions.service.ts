@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Post } from 'models/feed/post.schema';
@@ -8,6 +8,7 @@ import { Like } from 'models/feed/like.schema';
 import { Repost } from 'models/feed/repost.schema';
 import { Share } from 'models/feed/share.schema';
 import { SavedPost } from 'models/feed/saved-post.schema';
+import { CreateCommentDto, CreateReplyDto } from './dto/feed.dto';
 
 @Injectable()
 export class InteractionsService {
@@ -71,8 +72,18 @@ export class InteractionsService {
   }
 
   // ===================== COMMENTS =====================
-  async createComment(userId: string, postId: string, content: string) {
-    const comment = await this.commentModel.create({ user_id: userId, post_id: postId, content });
+  async createComment(userId: string, postId: string, dto: CreateCommentDto) {
+    const content = (dto.content || '').trim();
+    if (!content && !dto.media_id) {
+      throw new BadRequestException('Comment must include text or media');
+    }
+
+    const comment = await this.commentModel.create({
+      user_id: userId,
+      post_id: postId,
+      content,
+      media_id: dto.media_id
+    });
 
     // Atomic synchronization
     await this.postModel.updateOne({ _id: postId }, { $inc: { comments_count: 1 } });
@@ -80,8 +91,18 @@ export class InteractionsService {
     return comment.populate('user_id', 'name username profile');
   }
 
-  async createReply(userId: string, commentId: string, content: string) {
-    const reply = await this.replyModel.create({ user_id: userId, comment_id: commentId, content });
+  async createReply(userId: string, commentId: string, dto: CreateReplyDto) {
+    const content = (dto.content || '').trim();
+    if (!content && !dto.media_id) {
+      throw new BadRequestException('Reply must include text or media');
+    }
+
+    const reply = await this.replyModel.create({
+      user_id: userId,
+      comment_id: commentId,
+      content,
+      media_id: dto.media_id
+    });
     await this.commentModel.updateOne({ _id: commentId }, { $inc: { replies_count: 1 } });
     return reply.populate('user_id', 'name username profile');
   }
@@ -133,6 +154,7 @@ export class InteractionsService {
   async getCommentsByPost(postId: string) {
     return this.commentModel.find({ post_id: postId })
       .populate('user_id', 'name username profile')
+      .populate('media_id')
       .sort({ created_at: -1 })
       .lean();
   }
@@ -140,6 +162,7 @@ export class InteractionsService {
   async getRepliesByComment(commentId: string) {
     return this.replyModel.find({ comment_id: commentId })
       .populate('user_id', 'name username profile')
+      .populate('media_id')
       .sort({ created_at: 1 }) // Chronological order is standard for replies
       .lean();
   }

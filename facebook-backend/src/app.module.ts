@@ -13,6 +13,7 @@ import { NetworkService } from './utils/services/network.service';
 import { AppController } from './app.controller';
 import { APIUrlLoggerMiddleware } from './middlewares';
 import { DatabaseConfigService } from 'config';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { DatabaseConfigService } from 'config';
     CommonModule,
     FriendsModule,
     FeedModule,
+    MediaModule,
   ],
   providers: [BootstrapService, NetworkService],
   controllers: [AppController],

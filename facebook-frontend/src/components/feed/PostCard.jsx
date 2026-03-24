@@ -21,6 +21,8 @@ export default function PostCard({ post, initiallySaved = false, onUnsave }) {
 
   const isRepost = post.feed_type === 'repost';
   const renderData = isRepost ? post.original_post : post;
+  const textContent = (renderData?.content || '').trim();
+  const media = renderData?.media_id && typeof renderData.media_id === 'object' ? renderData.media_id : null;
 
   const initialLiked = renderData.likes?.some(l => l.user_id === currentUser.id);
   const [isLiked, setIsLiked] = useState(initialLiked);
@@ -148,14 +150,28 @@ export default function PostCard({ post, initiallySaved = false, onUnsave }) {
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-3 text-[15px] text-gray-900 whitespace-pre-wrap">
-        {renderData.content}
-      </div>
+      {textContent && (
+        <div className="px-4 pb-3 text-[15px] text-gray-900 whitespace-pre-wrap">
+          {renderData.content}
+        </div>
+      )}
 
-      {/* Media Placeholder */}
-      {renderData.media_id && (
-        <div className="w-full h-72 bg-gray-100 flex items-center justify-center text-gray-400 border-y">
-          Attached Media Placeholder
+      {/* Media */}
+      {media?.url && (
+        <div className="w-full border-y bg-black flex justify-center">
+          {media.type === 'video' ? (
+            <video
+              src={media.url}
+              controls
+              className="max-w-full max-h-[500px]"
+            />
+          ) : (
+            <img
+              src={media.url}
+              alt="Post content"
+              className="max-w-full max-h-[500px] object-contain"
+            />
+          )}
         </div>
       )}
 

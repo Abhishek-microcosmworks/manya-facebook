@@ -9,8 +9,11 @@ export class Reply extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Comment', required: true, index: true })
   comment_id: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   content: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Media' })
+  media_id: Types.ObjectId;
 
   @Prop({ type: Number, default: 0 })
   likes_count: number;

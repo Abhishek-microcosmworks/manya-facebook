@@ -9,8 +9,11 @@ export class Comment extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Post', required: true, index: true })
   post_id: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   content: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Media' })
+  media_id: Types.ObjectId;
 
   // Optimization: Denormalized caches for O(1) rendering
   @Prop({ type: Number, default: 0 })
